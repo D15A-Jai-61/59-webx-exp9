@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Registration Form</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { margin: 5px 0; display: block; }
+    .suggestions { border: 1px solid #ccc; max-width: 300px; }
+    .suggestions div { padding: 5px; cursor: pointer; }
+    .suggestions div:hover { background-color: #eee; }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+
+<h2>Registration Form</h2>
+
+<form id="registerForm">
+  <label>Name:</label>
+  <input type="text" id="name" name="name">
+
+  <label>College:</label>
+  <input type="text" id="college" name="college" autocomplete="off">
+  <div id="collegeSuggestions" class="suggestions"></div>
+
+  <label>Username:</label>
+  <input type="text" id="username" name="username">
+
+  <label>Password:</label>
+  <input type="password" id="password" name="password">
+
+  <label>Retype Password:</label>
+  <input type="password" id="retypePassword" name="retypePassword">
+
+  <button type="submit">Register</button>
+</form>
+
+<div id="message"></div>
+
+<script>
+  const existingUsers = ['Jai', 'Prajyot', 'Laksh'];
+  const colleges = ['VESIT', 'VJTI', 'IIT', 'IIM', 'NMIMS', 'Xavier'];
+
+  document.getElementById('college').addEventListener('input', function() {
+    const input = this.value.toLowerCase();
+    const suggestions = colleges.filter(college => college.toLowerCase().includes(input));
+    const suggestionBox = document.getElementById('collegeSuggestions');
+    suggestionBox.innerHTML = '';
+    suggestions.forEach(college => {
+      const div = document.createElement('div');
+      div.textContent = college;
+      div.onclick = () => {
+        document.getElementById('college').value = college;
+        suggestionBox.innerHTML = '';
+      };
+      suggestionBox.appendChild(div);
+    });
+  });
+
+  document.getElementById('registerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const college = document.getElementById('college').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const retypePassword = document.getElementById('retypePassword').value;
+    const messageBox = document.getElementById('message');
+
+    if (name === '') {
+      messageBox.innerHTML = '<div class="error">Name field cannot be empty.</div>';
+      return;
+    }
+
+    if (existingUsers.includes(username)) {
+      messageBox.innerHTML = '<div class="error">Username already exists.</div>';
+      return;
+    }
+
+    if (password !== retypePassword) {
+      messageBox.innerHTML = '<div class="error">Passwords do not match.</div>';
+      return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/register', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+
+    xhr.onload = function () {
+      if (xhr.status === 200) {
+        existingUsers.push(username);
+        messageBox.innerHTML = '<div class="success">Successfully Registered!</div>';
+        document.getElementById('registerForm').reset();
+        document.getElementById('collegeSuggestions').innerHTML = '';
+      } else {
+        messageBox.innerHTML = '<div class="error">Registration failed. Try again.</div>';
+      }
+    };
+
+    setTimeout(() => {
+      xhr.status = 200;
+      xhr.onload();
+    }, 500);
+
+    const data = JSON.stringify({ name, college, username, password });
+    xhr.send(data);
+  });
+</script>
+
+</body>
+</html>
+
